@@ -96,11 +96,11 @@ export default function AuthPage() {
                 {mode === 'login' ? 'Create Account' : 'Back to Login'}
               </button>
             )}
-            {activeRole === 'admin' && !adminExists && (
-              <button style={styles.modeToggle} onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
-                {mode === 'login' ? 'Setup Admin' : 'Back to Login'}
-              </button>
-            )}
+            {activeRole === 'admin' && (
+  <button style={styles.modeToggle} onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
+    {mode === 'login' ? 'Setup Admin' : 'Back to Login'}
+  </button>
+)}
           </div>
 
           {activeRole === 'admin' && adminExists && mode === 'signup' && (
