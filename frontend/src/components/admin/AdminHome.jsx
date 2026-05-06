@@ -1,45 +1,38 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import api from '../../utils/api'
 import { formatShortDate } from '../../utils/dateUtils'
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar
-} from 'recharts'
+import axios from 'axios'
 
-const COLORS = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6']
+const BASE = 'https://thcoc-backend.onrender.com/api'
 
 export default function AdminHome() {
   const { user } = useAuth()
   const [overview, setOverview] = useState({ totalMembers: 0, totalSundays: 0, lastAttendanceTotal: 0, flaggedMembers: 0 })
   const [flagged, setFlagged] = useState([])
   const [recentAttendance, setRecentAttendance] = useState([])
-  const [allAttendance, setAllAttendance] = useState([])
-  const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
- useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const stored = localStorage.getItem('thcoc_user')
-        const token = stored ? JSON.parse(stored).token : null
-        const config = { headers: { Authorization: `Bearer ${token}` } }
+        if (!stored) { setError('Not logged in'); setLoading(false); return }
+        const { token } = JSON.parse(stored)
+        const headers = { Authorization: `Bearer ${token}` }
 
-        const [ovRes, flagRes, attRes, memRes] = await Promise.all([
-          api.get('/reports/overview', config),
-          api.get('/reports/flagged-members', config),
-          api.get('/attendance', config),
-          api.get('/members', config)
+        const [ovRes, flagRes, attRes] = await Promise.all([
+          axios.get(`${BASE}/reports/overview`, { headers }),
+          axios.get(`${BASE}/reports/flagged-members`, { headers }),
+          axios.get(`${BASE}/attendance`, { headers })
         ])
+
         setOverview(ovRes.data)
         setFlagged(flagRes.data)
         setRecentAttendance(attRes.data.slice(0, 5))
-        setAllAttendance(attRes.data.slice(0, 10).reverse())
-        setMembers(memRes.data)
       } catch (err) {
-        console.error('Dashboard error:', err)
-        setError(err.message)
+        console.error(err)
+        setError(err.response?.data?.message || err.message)
       } finally {
         setLoading(false)
       }
@@ -55,56 +48,25 @@ export default function AdminHome() {
 
   if (error) return (
     <div className="page-wrapper">
-      <div className="alert alert-error">
-        ❌ Failed to load dashboard: {error}. Please refresh the page.
-      </div>
+      <div className="alert alert-error">❌ Error: {error}</div>
       <button className="btn btn-primary" onClick={() => window.location.reload()}>
-        🔄 Refresh Page
+        🔄 Refresh
       </button>
     </div>
   )
-
-  // Chart data
-  const attendanceTrendData = allAttendance.map(rec => ({
-    date: formatShortDate(rec.sundayDate),
-    Males: rec.stats?.males || 0,
-    Females: rec.stats?.females || 0,
-    Total: rec.stats?.total || 0
-  }))
-
-  const genderData = [
-    { name: 'Male', value: members.filter(m => m.gender === 'Male').length },
-    { name: 'Female', value: members.filter(m => m.gender === 'Female').length }
-  ]
-
-  const membershipData = [
-    { name: 'Full Member', value: members.filter(m => m.membershipType === 'Full Member').length },
-    { name: 'New Convert', value: members.filter(m => m.membershipType === 'New Convert').length },
-    { name: 'Visitor', value: members.filter(m => m.membershipType === 'Visitor').length }
-  ]
-
-  const lastAttendance = recentAttendance[0]
-  const attendanceBreakdown = lastAttendance ? [
-    { name: 'Males', value: lastAttendance.stats?.males || 0 },
-    { name: 'Females', value: lastAttendance.stats?.females || 0 },
-    { name: 'Intermediate', value: lastAttendance.intermediateClass || 0 },
-    { name: 'Children', value: lastAttendance.childrenService || 0 },
-    { name: 'Travellers', value: lastAttendance.stats?.travellers || 0 }
-  ] : []
 
   return (
     <div className="page-wrapper">
       <div className="page-header">
         <div>
           <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">Welcome back, {user?.name}. Here's your church overview.</p>
+          <p className="page-subtitle">Welcome back, {user?.name}.</p>
         </div>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
           {new Date().toLocaleDateString('en-GH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
       </div>
 
-      {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon blue">👥</div>
@@ -124,88 +86,6 @@ export default function AdminHome() {
         </div>
       </div>
 
-      {/* Attendance Trend Chart */}
-      <div className="card" style={{ marginBottom: 20 }}>
-        <div className="card-header">
-          <span className="card-title">📈 Attendance Trend</span>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last {attendanceTrendData.length} Sundays</span>
-        </div>
-        {attendanceTrendData.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">📈</div>
-            <h3>No attendance data yet</h3>
-            <p>Start marking Sunday attendance to see trends</p>
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={attendanceTrendData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
-              <YAxis stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
-              <Tooltip contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }} labelStyle={{ color: 'var(--text)' }} />
-              <Line type="monotone" dataKey="Total" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
-              <Line type="monotone" dataKey="Males" stroke="#60a5fa" strokeWidth={2} dot={{ fill: '#60a5fa' }} />
-              <Line type="monotone" dataKey="Females" stroke="#ec4899" strokeWidth={2} dot={{ fill: '#ec4899' }} />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-
-      {/* Pie Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
-        <div className="card">
-          <div className="card-header"><span className="card-title">👥 Gender Split</span></div>
-          {genderData.every(d => d.value === 0) ? (
-            <div className="empty-state"><div className="empty-state-icon">👥</div><p>No member data yet</p></div>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie data={genderData} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                  {genderData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-                </Pie>
-                <Tooltip contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        <div className="card">
-          <div className="card-header"><span className="card-title">🏷️ Membership Types</span></div>
-          {membershipData.every(d => d.value === 0) ? (
-            <div className="empty-state"><div className="empty-state-icon">🏷️</div><p>No member data yet</p></div>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={membershipData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={10} tick={{ fill: 'var(--text-muted)' }} />
-                <YAxis stroke="var(--text-muted)" fontSize={10} tick={{ fill: 'var(--text-muted)' }} />
-                <Tooltip contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {membershipData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        <div className="card">
-          <div className="card-header"><span className="card-title">📊 Last Sunday Breakdown</span></div>
-          {attendanceBreakdown.length === 0 || attendanceBreakdown.every(d => d.value === 0) ? (
-            <div className="empty-state"><div className="empty-state-icon">📊</div><p>No attendance data yet</p></div>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie data={attendanceBreakdown} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => value > 0 ? `${name}: ${value}` : ''}>
-                  {attendanceBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-                </Pie>
-                <Tooltip contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Attendance & Flagged */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div className="card">
           <div className="card-header"><span className="card-title">Recent Attendance</span></div>
