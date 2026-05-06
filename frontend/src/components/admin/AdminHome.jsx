@@ -4,19 +4,20 @@ import api from '../../utils/api'
 import { formatShortDate } from '../../utils/dateUtils'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar, Legend
+  PieChart, Pie, Cell, BarChart, Bar
 } from 'recharts'
 
 const COLORS = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6']
 
 export default function AdminHome() {
   const { user } = useAuth()
-  const [overview, setOverview] = useState(null)
+  const [overview, setOverview] = useState({ totalMembers: 0, totalSundays: 0, lastAttendanceTotal: 0, flaggedMembers: 0 })
   const [flagged, setFlagged] = useState([])
   const [recentAttendance, setRecentAttendance] = useState([])
   const [allAttendance, setAllAttendance] = useState([])
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,13 +33,32 @@ export default function AdminHome() {
         setRecentAttendance(attRes.data.slice(0, 5))
         setAllAttendance(attRes.data.slice(0, 10).reverse())
         setMembers(memRes.data)
-      } catch (err) { console.error(err) }
-      finally { setLoading(false) }
+      } catch (err) {
+        console.error('Dashboard error:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
     }
     fetchData()
   }, [])
 
-  if (loading) return <div className="loading-spinner"><div className="spinner" /></div>
+  if (loading) return (
+    <div className="loading-spinner" style={{ height: '60vh' }}>
+      <div className="spinner" />
+    </div>
+  )
+
+  if (error) return (
+    <div className="page-wrapper">
+      <div className="alert alert-error">
+        ❌ Failed to load dashboard: {error}. Please refresh the page.
+      </div>
+      <button className="btn btn-primary" onClick={() => window.location.reload()}>
+        🔄 Refresh Page
+      </button>
+    </div>
+  )
 
   // Chart data
   const attendanceTrendData = allAttendance.map(rec => ({
@@ -101,38 +121,38 @@ export default function AdminHome() {
       </div>
 
       {/* Attendance Trend Chart */}
-      {attendanceTrendData.length > 0 && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <div className="card-header">
-            <span className="card-title">📈 Attendance Trend</span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last {attendanceTrendData.length} Sundays</span>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div className="card-header">
+          <span className="card-title">📈 Attendance Trend</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last {attendanceTrendData.length} Sundays</span>
+        </div>
+        {attendanceTrendData.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">📈</div>
+            <h3>No attendance data yet</h3>
+            <p>Start marking Sunday attendance to see trends</p>
           </div>
+        ) : (
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={attendanceTrendData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
               <YAxis stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
-              <Tooltip
-                contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }}
-                labelStyle={{ color: 'var(--text)' }}
-              />
-              <Legend />
+              <Tooltip contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }} labelStyle={{ color: 'var(--text)' }} />
               <Line type="monotone" dataKey="Total" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
               <Line type="monotone" dataKey="Males" stroke="#60a5fa" strokeWidth={2} dot={{ fill: '#60a5fa' }} />
               <Line type="monotone" dataKey="Females" stroke="#ec4899" strokeWidth={2} dot={{ fill: '#ec4899' }} />
             </LineChart>
           </ResponsiveContainer>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Pie Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, marginBottom: 20 }}>
-
-        {/* Gender Distribution */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
         <div className="card">
           <div className="card-header"><span className="card-title">👥 Gender Split</span></div>
           {genderData.every(d => d.value === 0) ? (
-            <div className="empty-state"><p>No member data</p></div>
+            <div className="empty-state"><div className="empty-state-icon">👥</div><p>No member data yet</p></div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -145,11 +165,10 @@ export default function AdminHome() {
           )}
         </div>
 
-        {/* Membership Type */}
         <div className="card">
           <div className="card-header"><span className="card-title">🏷️ Membership Types</span></div>
           {membershipData.every(d => d.value === 0) ? (
-            <div className="empty-state"><p>No member data</p></div>
+            <div className="empty-state"><div className="empty-state-icon">🏷️</div><p>No member data yet</p></div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={membershipData}>
@@ -165,11 +184,10 @@ export default function AdminHome() {
           )}
         </div>
 
-        {/* Last Sunday Breakdown */}
         <div className="card">
-          <div className="card-header"><span className="card-title">📊 Last Sunday</span></div>
-          {attendanceBreakdown.every(d => d.value === 0) || attendanceBreakdown.length === 0 ? (
-            <div className="empty-state"><p>No attendance data</p></div>
+          <div className="card-header"><span className="card-title">📊 Last Sunday Breakdown</span></div>
+          {attendanceBreakdown.length === 0 || attendanceBreakdown.every(d => d.value === 0) ? (
+            <div className="empty-state"><div className="empty-state-icon">📊</div><p>No attendance data yet</p></div>
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
