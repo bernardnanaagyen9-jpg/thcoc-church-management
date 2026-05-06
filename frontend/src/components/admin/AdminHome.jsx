@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { formatShortDate } from '../../utils/dateUtils'
 import axios from 'axios'
-
+import { SkeletonStats, SkeletonTable, SkeletonCard } from '../layout/SkeletonLoader'
 const BASE = 'https://thcoc-backend.onrender.com/api'
 
 export default function AdminHome() {
@@ -40,11 +41,16 @@ export default function AdminHome() {
     fetchData()
   }, [])
 
-  if (loading) return (
-    <div className="loading-spinner" style={{ height: '60vh' }}>
-      <div className="spinner" />
+ if (loading) return (
+  <div className="page-wrapper">
+    <SkeletonStats />
+    <SkeletonTable />
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 20 }}>
+      <SkeletonCard />
+      <SkeletonCard />
     </div>
-  )
+  </div>
+)
 
   if (error) return (
     <div className="page-wrapper">

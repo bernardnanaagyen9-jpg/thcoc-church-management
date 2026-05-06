@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
@@ -58,7 +58,11 @@ const UserLayout = ({ children }) => (
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading } = useAuth()
-  if (loading) return <div className="loading-spinner" style={{ height: '100vh' }}><div className="spinner" /></div>
+  if (loading) return (
+    <div className="loading-spinner" style={{ height: '100vh' }}>
+      <div className="spinner" />
+    </div>
+  )
   if (!user) return <Navigate to="/" replace />
   if (requiredRole && user.role !== requiredRole) {
     return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />
@@ -73,8 +77,6 @@ const AppRoutes = () => {
       <Route path="/" element={
         user ? <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace /> : <AuthPage />
       } />
-
-      {/* Admin Routes */}
       <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout><AdminHome /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/members" element={<ProtectedRoute requiredRole="admin"><AdminLayout><MembersPage /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/travellers" element={<ProtectedRoute requiredRole="admin"><AdminLayout><TravellersPage isAdmin={true} /></AdminLayout></ProtectedRoute>} />
@@ -83,25 +85,41 @@ const AppRoutes = () => {
       <Route path="/admin/thanksgiving" element={<ProtectedRoute requiredRole="admin"><AdminLayout><ThanksgivingPage isAdmin={true} /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/joint" element={<ProtectedRoute requiredRole="admin"><AdminLayout><JointServicePage isAdmin={true} /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SettingsPage /></AdminLayout></ProtectedRoute>} />
-
-      {/* User Routes */}
       <Route path="/dashboard" element={<ProtectedRoute requiredRole="user"><UserLayout><UserHome /></UserLayout></ProtectedRoute>} />
       <Route path="/dashboard/attendance" element={<ProtectedRoute requiredRole="user"><UserLayout><AttendancePage isAdmin={false} /></UserLayout></ProtectedRoute>} />
       <Route path="/dashboard/travellers" element={<ProtectedRoute requiredRole="user"><UserLayout><TravellersPage isAdmin={false} /></UserLayout></ProtectedRoute>} />
       <Route path="/dashboard/thanksgiving" element={<ProtectedRoute requiredRole="user"><UserLayout><ThanksgivingPage isAdmin={false} /></UserLayout></ProtectedRoute>} />
       <Route path="/dashboard/joint" element={<ProtectedRoute requiredRole="user"><UserLayout><JointServicePage isAdmin={false} /></UserLayout></ProtectedRoute>} />
-
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
 
 function App() {
+  // Keep backend alive - ping every 14 minutes
+  useEffect(() => {
+    const keepAlive = () => {
+      fetch('https://thcoc-backend.onrender.com/api/health')
+        .catch(() => {})
+    }
+    keepAlive()
+    const interval = setInterval(keepAlive, 840000)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <AuthProvider>
       <Router>
         <AppRoutes />
-        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnHover theme="dark" />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          theme="dark"
+        />
       </Router>
     </AuthProvider>
   )
