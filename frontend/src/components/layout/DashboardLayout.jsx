@@ -18,6 +18,18 @@ export default function DashboardLayout({ links, basePath, routes }) {
 }
 
 const styles = {
-  layout: { display: 'flex', minHeight: '100vh', background: 'var(--dark)' },
-  main: { flex: 1, overflow: 'auto', minWidth: 0 }
+  layout: {
+    display: 'flex',
+    minHeight: '100vh',
+    background: '#1e2535',
+    width: '100%'
+  },
+  main: {
+    flex: 1,
+    overflow: 'auto',
+    minWidth: 0,
+    background: '#1e2535',
+    color: '#e2e8f0',
+    padding: 0
+  }
 }
