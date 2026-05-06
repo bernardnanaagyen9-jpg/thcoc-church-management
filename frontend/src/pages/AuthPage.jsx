@@ -12,8 +12,10 @@ export default function AuthPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
 
   useEffect(() => {
-    api.get('/auth/check-admin').then(res => setAdminExists(res.data.exists))
-  }, [])
+  api.get('/auth/check-admin')
+    .then(res => setAdminExists(res.data.exists))
+    .catch(() => setAdminExists(false))
+}, [])
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value })
 
