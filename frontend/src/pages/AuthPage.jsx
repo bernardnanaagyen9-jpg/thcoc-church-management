@@ -7,7 +7,7 @@ export default function AuthPage() {
   const { login } = useAuth()
   const [activeRole, setActiveRole] = useState('user')
   const [mode, setMode] = useState('login')
-  const [adminExists, setAdminExists] = useState(true)
+  const [adminExists, setAdminExists] = useState(false)
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
 
