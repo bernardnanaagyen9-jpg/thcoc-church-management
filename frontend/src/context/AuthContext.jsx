@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../utils/api'
 
 const AuthContext = createContext(null)
 
@@ -8,11 +8,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const stored = localStorage.getItem('thcoc_user')
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      setUser(parsed)
-      axios.defaults.headers.common['Authorization'] = `Bearer ${parsed.token}`
+    try {
+      const stored = localStorage.getItem('thcoc_user')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        setUser(parsed)
+        api.defaults.headers.common['Authorization'] = `Bearer ${parsed.token}`
+      }
+    } catch (e) {
+      console.error('Auth restore error:', e)
+      localStorage.removeItem('thcoc_user')
     }
     setLoading(false)
   }, [])
@@ -20,13 +25,13 @@ export const AuthProvider = ({ children }) => {
   const login = (userData) => {
     setUser(userData)
     localStorage.setItem('thcoc_user', JSON.stringify(userData))
-    axios.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`
+    api.defaults.headers.common['Authorization'] = `Bearer ${userData.token}`
   }
 
   const logout = () => {
     setUser(null)
     localStorage.removeItem('thcoc_user')
-    delete axios.defaults.headers.common['Authorization']
+    delete api.defaults.headers.common['Authorization']
   }
 
   return (
