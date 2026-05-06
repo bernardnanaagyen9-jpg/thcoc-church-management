@@ -43,7 +43,7 @@ export default function Sidebar({ links, basePath }) {
         {links.map(link => (
           <NavLink
             key={link.path}
-            to={`${basePath}${link.path}`}
+           to={link.path}
             end={link.path === ''}
             style={({ isActive }) => ({
               ...styles.navLink,
@@ -119,7 +119,7 @@ const styles = {
     fontFamily: 'Inter, sans-serif'
   },
   navLinkActive: {
-    background: 'rgba(37,99,168,0.25)', color: '#93c5fd',
+    background: 'rgba(27, 74, 244, 0.4)', color: '#93c5fd',
     borderLeft: '3px solid #3b82f6'
   },
   navIcon: { fontSize: '1.1rem', width: 24, textAlign: 'center', flexShrink: 0 },
