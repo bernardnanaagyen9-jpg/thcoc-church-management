@@ -19,14 +19,18 @@ export default function AdminHome() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchData = async () => {
       try {
+        const stored = localStorage.getItem('thcoc_user')
+        const token = stored ? JSON.parse(stored).token : null
+        const config = { headers: { Authorization: `Bearer ${token}` } }
+
         const [ovRes, flagRes, attRes, memRes] = await Promise.all([
-          api.get('/reports/overview'),
-          api.get('/reports/flagged-members'),
-          api.get('/attendance'),
-          api.get('/members')
+          api.get('/reports/overview', config),
+          api.get('/reports/flagged-members', config),
+          api.get('/attendance', config),
+          api.get('/members', config)
         ])
         setOverview(ovRes.data)
         setFlagged(flagRes.data)
