@@ -8,7 +8,8 @@ export default function DashboardLayout({ links, basePath, routes }) {
       <Sidebar links={links} basePath={basePath} />
       <main style={styles.main}>
         <Routes>
-          {routes.map(r => (
+          <Route index element={routes[1]?.element} />
+          {routes.slice(2).map(r => (
             <Route key={r.path} path={r.path} element={r.element} />
           ))}
         </Routes>
@@ -29,7 +30,6 @@ const styles = {
     overflow: 'auto',
     minWidth: 0,
     background: '#1e2535',
-    color: '#e2e8f0',
-    padding: 0
+    color: '#e2e8f0'
   }
 }

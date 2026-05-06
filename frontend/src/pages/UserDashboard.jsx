@@ -17,11 +17,11 @@ const userLinks = [
 
 const userRoutes = [
   { path: '/', element: <Navigate to="/dashboard" replace /> },
-  { path: '', element: <UserHome /> },
-  { path: '/attendance', element: <AttendancePage isAdmin={false} /> },
-  { path: '/travellers', element: <TravellersPage isAdmin={false} /> },
-  { path: '/thanksgiving', element: <ThanksgivingPage isAdmin={false} /> },
-  { path: '/joint', element: <JointServicePage isAdmin={false} /> },
+  { path: '/', element: <UserHome /> },
+  { path: 'attendance', element: <AttendancePage isAdmin={false} /> },
+  { path: 'travellers', element: <TravellersPage isAdmin={false} /> },
+  { path: 'thanksgiving', element: <ThanksgivingPage isAdmin={false} /> },
+  { path: 'joint', element: <JointServicePage isAdmin={false} /> },
 ]
 
 export default function UserDashboard() {

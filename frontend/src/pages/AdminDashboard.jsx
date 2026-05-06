@@ -23,14 +23,14 @@ const adminLinks = [
 
 const adminRoutes = [
   { path: '/', element: <Navigate to="/admin" replace /> },
-  { path: '', element: <AdminHome /> },
-  { path: '/members', element: <MembersPage /> },
-  { path: '/travellers', element: <TravellersPage isAdmin={true} /> },
-  { path: '/attendance', element: <AttendancePage isAdmin={true} /> },
-  { path: '/reports', element: <ReportsPage /> },
-  { path: '/thanksgiving', element: <ThanksgivingPage isAdmin={true} /> },
-  { path: '/joint', element: <JointServicePage isAdmin={true} /> },
-  { path: '/settings', element: <SettingsPage /> },
+  { path: '/', element: <AdminHome /> },
+  { path: 'members', element: <MembersPage /> },
+  { path: 'travellers', element: <TravellersPage isAdmin={true} /> },
+  { path: 'attendance', element: <AttendancePage isAdmin={true} /> },
+  { path: 'reports', element: <ReportsPage /> },
+  { path: 'thanksgiving', element: <ThanksgivingPage isAdmin={true} /> },
+  { path: 'joint', element: <JointServicePage isAdmin={true} /> },
+  { path: 'settings', element: <SettingsPage /> },
 ]
 
 export default function AdminDashboard() {
