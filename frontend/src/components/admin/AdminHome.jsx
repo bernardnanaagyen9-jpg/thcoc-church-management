@@ -2,25 +2,36 @@ import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../utils/api'
 import { formatShortDate } from '../../utils/dateUtils'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, BarChart, Bar, Legend
+} from 'recharts'
+
+const COLORS = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6']
 
 export default function AdminHome() {
   const { user } = useAuth()
   const [overview, setOverview] = useState(null)
   const [flagged, setFlagged] = useState([])
   const [recentAttendance, setRecentAttendance] = useState([])
+  const [allAttendance, setAllAttendance] = useState([])
+  const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [ovRes, flagRes, attRes] = await Promise.all([
+        const [ovRes, flagRes, attRes, memRes] = await Promise.all([
           api.get('/reports/overview'),
           api.get('/reports/flagged-members'),
-          api.get('/attendance')
+          api.get('/attendance'),
+          api.get('/members')
         ])
         setOverview(ovRes.data)
         setFlagged(flagRes.data)
         setRecentAttendance(attRes.data.slice(0, 5))
+        setAllAttendance(attRes.data.slice(0, 10).reverse())
+        setMembers(memRes.data)
       } catch (err) { console.error(err) }
       finally { setLoading(false) }
     }
@@ -28,6 +39,34 @@ export default function AdminHome() {
   }, [])
 
   if (loading) return <div className="loading-spinner"><div className="spinner" /></div>
+
+  // Chart data
+  const attendanceTrendData = allAttendance.map(rec => ({
+    date: formatShortDate(rec.sundayDate),
+    Males: rec.stats?.males || 0,
+    Females: rec.stats?.females || 0,
+    Total: rec.stats?.total || 0
+  }))
+
+  const genderData = [
+    { name: 'Male', value: members.filter(m => m.gender === 'Male').length },
+    { name: 'Female', value: members.filter(m => m.gender === 'Female').length }
+  ]
+
+  const membershipData = [
+    { name: 'Full Member', value: members.filter(m => m.membershipType === 'Full Member').length },
+    { name: 'New Convert', value: members.filter(m => m.membershipType === 'New Convert').length },
+    { name: 'Visitor', value: members.filter(m => m.membershipType === 'Visitor').length }
+  ]
+
+  const lastAttendance = recentAttendance[0]
+  const attendanceBreakdown = lastAttendance ? [
+    { name: 'Males', value: lastAttendance.stats?.males || 0 },
+    { name: 'Females', value: lastAttendance.stats?.females || 0 },
+    { name: 'Intermediate', value: lastAttendance.intermediateClass || 0 },
+    { name: 'Children', value: lastAttendance.childrenService || 0 },
+    { name: 'Travellers', value: lastAttendance.stats?.travellers || 0 }
+  ] : []
 
   return (
     <div className="page-wrapper">
@@ -41,6 +80,7 @@ export default function AdminHome() {
         </div>
       </div>
 
+      {/* Stats */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon blue">👥</div>
@@ -60,6 +100,90 @@ export default function AdminHome() {
         </div>
       </div>
 
+      {/* Attendance Trend Chart */}
+      {attendanceTrendData.length > 0 && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="card-header">
+            <span className="card-title">📈 Attendance Trend</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last {attendanceTrendData.length} Sundays</span>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={attendanceTrendData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
+              <YAxis stroke="var(--text-muted)" fontSize={11} tick={{ fill: 'var(--text-muted)' }} />
+              <Tooltip
+                contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }}
+                labelStyle={{ color: 'var(--text)' }}
+              />
+              <Legend />
+              <Line type="monotone" dataKey="Total" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} />
+              <Line type="monotone" dataKey="Males" stroke="#60a5fa" strokeWidth={2} dot={{ fill: '#60a5fa' }} />
+              <Line type="monotone" dataKey="Females" stroke="#ec4899" strokeWidth={2} dot={{ fill: '#ec4899' }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Pie Charts Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20, marginBottom: 20 }}>
+
+        {/* Gender Distribution */}
+        <div className="card">
+          <div className="card-header"><span className="card-title">👥 Gender Split</span></div>
+          {genderData.every(d => d.value === 0) ? (
+            <div className="empty-state"><p>No member data</p></div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={genderData} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                  {genderData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Membership Type */}
+        <div className="card">
+          <div className="card-header"><span className="card-title">🏷️ Membership Types</span></div>
+          {membershipData.every(d => d.value === 0) ? (
+            <div className="empty-state"><p>No member data</p></div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={membershipData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={10} tick={{ fill: 'var(--text-muted)' }} />
+                <YAxis stroke="var(--text-muted)" fontSize={10} tick={{ fill: 'var(--text-muted)' }} />
+                <Tooltip contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                  {membershipData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Last Sunday Breakdown */}
+        <div className="card">
+          <div className="card-header"><span className="card-title">📊 Last Sunday</span></div>
+          {attendanceBreakdown.every(d => d.value === 0) || attendanceBreakdown.length === 0 ? (
+            <div className="empty-state"><p>No attendance data</p></div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={attendanceBreakdown} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => value > 0 ? `${name}: ${value}` : ''}>
+                  {attendanceBreakdown.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: 'var(--dark-2)', border: '1px solid var(--border)', borderRadius: 8 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      {/* Recent Attendance & Flagged */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         <div className="card">
           <div className="card-header"><span className="card-title">Recent Attendance</span></div>
