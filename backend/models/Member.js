@@ -22,24 +22,33 @@ const memberSchema = new mongoose.Schema({
 
 memberSchema.pre('save', async function(next) {
   if (!this.memberId) {
-    let isUnique = false;
-    let num;
-    while (!isUnique) {
-      const count = await mongoose.model('Member').countDocuments();
-      const lastMember = await mongoose.model('Member').findOne().sort({ createdAt: -1 });
-      let nextNum = count + 1;
-      if (lastMember && lastMember.memberId) {
-        const lastNum = parseInt(lastMember.memberId.replace('THCoC-', ''));
-        nextNum = lastNum + 1;
+    try {
+      let isUnique = false
+      let memberId
+      while (!isUnique) {
+        // Find the highest existing member ID number
+        const lastMember = await mongoose.model('Member')
+          .findOne({ memberId: { $regex: /^THCoC-\d+$/ } })
+          .sort({ memberId: -1 })
+        
+        let nextNum = 1
+        if (lastMember && lastMember.memberId) {
+          const lastNum = parseInt(lastMember.memberId.replace('THCoC-', ''))
+          nextNum = lastNum + 1
+        }
+        
+        memberId = `THCoC-${String(nextNum).padStart(6, '0')}`
+        
+        // Check if this ID already exists
+        const existing = await mongoose.model('Member').findOne({ memberId })
+        if (!existing) isUnique = true
       }
-      num = String(nextNum).padStart(6, '0');
-      const existing = await mongoose.model('Member').findOne({ memberId: `THCoC-${num}` });
-      if (!existing) isUnique = true;
-      else nextNum++;
+      this.memberId = memberId
+    } catch (err) {
+      return next(err)
     }
-    this.memberId = `THCoC-${num}`;
   }
-  next();
+  next()
 });
 
 module.exports = mongoose.model('Member', memberSchema);
