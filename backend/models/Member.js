@@ -12,7 +12,7 @@ const memberSchema = new mongoose.Schema({
   membershipType: { type: String, enum: ['Full Member', 'New Convert', 'Visitor'], required: true },
   isActive: { type: Boolean, default: true },
   consecutiveAbsences: { type: Number, default: 0 },
-  isFlagged: { type: Boolean, default: false },
+  isFlagged: { membertype: Boolean, default: false },
   joinDate: { type: Date, default: Date.now }
   photo: {
   url: { type: String, default: '' },
@@ -22,8 +22,21 @@ const memberSchema = new mongoose.Schema({
 
 memberSchema.pre('save', async function(next) {
   if (!this.memberId) {
-    const count = await mongoose.model('Member').countDocuments();
-    const num = String(count + 1).padStart(6, '0');
+    let isUnique = false;
+    let num;
+    while (!isUnique) {
+      const count = await mongoose.model('Member').countDocuments();
+      const lastMember = await mongoose.model('Member').findOne().sort({ createdAt: -1 });
+      let nextNum = count + 1;
+      if (lastMember && lastMember.memberId) {
+        const lastNum = parseInt(lastMember.memberId.replace('THCoC-', ''));
+        nextNum = lastNum + 1;
+      }
+      num = String(nextNum).padStart(6, '0');
+      const existing = await mongoose.model('Member').findOne({ memberId: `THCoC-${num}` });
+      if (!existing) isUnique = true;
+      else nextNum++;
+    }
     this.memberId = `THCoC-${num}`;
   }
   next();
