@@ -14,6 +14,10 @@ const memberSchema = new mongoose.Schema({
   consecutiveAbsences: { type: Number, default: 0 },
   isFlagged: { type: Boolean, default: false },
   joinDate: { type: Date, default: Date.now }
+  photo: {
+  url: { type: String, default: '' },
+  publicId: { type: String, default: '' }
+},
 }, { timestamps: true });
 
 memberSchema.pre('save', async function(next) {
