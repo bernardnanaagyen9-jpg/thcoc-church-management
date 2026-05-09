@@ -60,9 +60,18 @@ router.post('/:id/photo', protect, adminOnly, upload.single('photo'), async (req
       await cloudinary.uploader.destroy(member.photo.publicId);
     }
 
+    // Upload buffer to cloudinary
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'thcoc-members', transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }] },
+        (error, result) => { if (error) reject(error); else resolve(result); }
+      )
+      stream.end(req.file.buffer)
+    })
+
     member.photo = {
-      url: req.file.path,
-      publicId: req.file.filename
+      url: result.secure_url,
+      publicId: result.public_id
     };
     await member.save();
     res.json({ message: 'Photo uploaded successfully', photo: member.photo });
