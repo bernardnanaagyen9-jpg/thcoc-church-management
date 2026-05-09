@@ -42,19 +42,37 @@ const userLinks = [
   { path: '/dashboard/joint', label: 'Joint Service', icon: '🤝' },
 ]
 
-const AdminLayout = ({ children }) => (
-  <div style={{ display: 'flex', minHeight: '100vh', background: '#1e2535' }}>
-    <Sidebar links={adminLinks} basePath="/admin" />
-    <main style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>{children}</main>
-  </div>
-)
+const AdminLayout = ({ children }) => {
+  const isMobile = window.innerWidth <= 768
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#1e2535' }}>
+      <Sidebar links={adminLinks} basePath="/admin" />
+      <main style={{
+        flex: 1, overflow: 'auto', minWidth: 0,
+        paddingTop: isMobile ? 56 : 0,
+        paddingBottom: isMobile ? 60 : 0
+      }}>
+        {children}
+      </main>
+    </div>
+  )
+}
 
-const UserLayout = ({ children }) => (
-  <div style={{ display: 'flex', minHeight: '100vh', background: '#1e2535' }}>
-    <Sidebar links={userLinks} basePath="/dashboard" />
-    <main style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>{children}</main>
-  </div>
-)
+const UserLayout = ({ children }) => {
+  const isMobile = window.innerWidth <= 768
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#1e2535' }}>
+      <Sidebar links={userLinks} basePath="/dashboard" />
+      <main style={{
+        flex: 1, overflow: 'auto', minWidth: 0,
+        paddingTop: isMobile ? 56 : 0,
+        paddingBottom: isMobile ? 60 : 0
+      }}>
+        {children}
+      </main>
+    </div>
+  )
+}
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading } = useAuth()
