@@ -31,7 +31,18 @@ router.post('/', protect, adminOnly, async (req, res) => {
 
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
-    const member = await Member.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
+    
+    const member = await Member.findByIdAndUpdate(
+      req.params.id, 
+      { 
+        fullName, phoneNumber, email, residentialAddress, 
+        occupation, gender, maritalStatus, membershipType,
+        familyHead: familyHead || '',
+        familyHeadContact: familyHeadContact || ''
+      }, 
+      { new: true, runValidators: true }
+    );
     if (!member) return res.status(404).json({ message: 'Member not found' });
     res.json(member);
   } catch (error) { res.status(500).json({ message: error.message }); }
