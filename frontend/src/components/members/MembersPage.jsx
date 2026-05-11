@@ -25,8 +25,19 @@ export default function MembersPage() {
   }
 
   const openAdd = () => { setForm(EMPTY); setEditMember(null); setShowModal(true) }
-  const openEdit = (m) => {
-    setForm({ fullName: m.fullName, phoneNumber: m.phoneNumber || '', email: m.email || '', residentialAddress: m.residentialAddress || '', occupation: m.occupation || '', gender: m.gender, maritalStatus: m.maritalStatus, membershipType: m.membershipType })
+ const openEdit = (m) => {
+    setForm({ 
+      fullName: m.fullName, 
+      phoneNumber: m.phoneNumber || '', 
+      email: m.email || '', 
+      residentialAddress: m.residentialAddress || '', 
+      occupation: m.occupation || '', 
+      gender: m.gender, 
+      maritalStatus: m.maritalStatus, 
+      membershipType: m.membershipType,
+      familyHead: m.familyHead || '',
+      familyHeadContact: m.familyHeadContact || ''
+    })
     setEditMember(m); setShowModal(true)
   }
 
