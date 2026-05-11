@@ -14,6 +14,14 @@ const memberSchema = new mongoose.Schema({
   consecutiveAbsences: { type: Number, default: 0 },
   isFlagged: { membertype: Boolean, default: false },
   joinDate: { type: Date, default: Date.now }
+  familyHead: {
+  type: String,
+  trim: true
+},
+familyHeadContact: {
+  type: String,
+  trim: true
+},
   photo: {
   url: { type: String, default: '' },
   publicId: { type: String, default: '' }

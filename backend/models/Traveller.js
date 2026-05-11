@@ -10,6 +10,14 @@ const travellerSchema = new mongoose.Schema({
   maritalStatus: { type: String, enum: ['Single', 'Married', 'Widow'] },
   membershipType: { type: String, enum: ['Full Member', 'New Convert', 'Visitor'], default: 'Visitor' },
   visitDate: { type: Date, default: Date.now },
+  familyHead: {
+  type: String,
+  trim: true
+},
+familyHeadContact: {
+  type: String,
+  trim: true
+},
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 

@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import api from '../../utils/api'
 import { formatShortDate } from '../../utils/dateUtils'
 
-const EMPTY = { fullName: '', phoneNumber: '', email: '', residentialAddress: '', occupation: '', gender: '', maritalStatus: '', membershipType: 'Visitor' }
+const EMPTY = { fullName: '', phoneNumber: '', email: '', residentialAddress: '', occupation: '', gender: '', maritalStatus: '', membershipType: 'Visitor', familyHead: '', familyHeadContact: '' }
 
 export default function TravellersPage({ isAdmin }) {
   const [travellers, setTravellers] = useState([])
@@ -136,7 +136,16 @@ export default function TravellersPage({ isAdmin }) {
                       <option value="">Select status</option><option>Single</option><option>Married</option><option>Widow</option>
                     </select>
                   </div>
+                  <div className="form-group">
+  <label className="form-label">Family Head</label>
+  <input className="form-control" value={form.familyHead} onChange={e => setForm({ ...form, familyHead: e.target.value })} placeholder="Name of family head" />
+</div>
+<div className="form-group">
+  <label className="form-label">Family Head Contact</label>
+  <input className="form-control" value={form.familyHeadContact} onChange={e => setForm({ ...form, familyHeadContact: e.target.value })} placeholder="Phone number of family head" />
+</div>
                 </div>
+
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>

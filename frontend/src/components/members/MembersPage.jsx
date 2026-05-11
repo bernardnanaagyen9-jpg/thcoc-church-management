@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import api from '../../utils/api'
 
-const EMPTY = { fullName: '', phoneNumber: '', email: '', residentialAddress: '', occupation: '', gender: '', maritalStatus: '', membershipType: '' }
+const EMPTY = { fullName: '', phoneNumber: '', email: '', residentialAddress: '', occupation: '', gender: '', maritalStatus: '', membershipType: '', familyHead: '', familyHeadContact: '' }
 
 export default function MembersPage() {
   const [members, setMembers] = useState([])
@@ -76,7 +76,7 @@ export default function MembersPage() {
             <div className="table-container">
               <table>
                 <thead>
-                  <tr><th>Member ID</th><th>Full Name</th><th>Gender</th><th>Phone</th><th>Membership</th><th>Marital Status</th><th>Status</th><th>Actions</th></tr>
+                  <tr><th>Member ID</th><th>Full Name</th><th>Gender</th><th>Phone</th><th>Membership</th><th>Marital Status</th><th>Family Head</th><th>Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                   {filtered.map(m => (
@@ -87,6 +87,7 @@ export default function MembersPage() {
                       <td>{m.phoneNumber || '—'}</td>
                       <td><span className={`badge ${m.membershipType === 'Full Member' ? 'badge-success' : m.membershipType === 'New Convert' ? 'badge-info' : 'badge-gray'}`}>{m.membershipType}</span></td>
                       <td>{m.maritalStatus}</td>
+                      <td>{m.familyHead || '—'}</td>
                       <td>{m.isFlagged ? <span className="badge badge-danger">⚠️ Flagged</span> : <span className="badge badge-success">Active</span>}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
@@ -120,6 +121,7 @@ export default function MembersPage() {
                     <label className="form-label">Phone Number</label>
                     <input className="form-control" value={form.phoneNumber} onChange={e => setForm({ ...form, phoneNumber: e.target.value })} />
                   </div>
+
                   <div className="form-group">
                     <label className="form-label">Email Address</label>
                     <input className="form-control" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
@@ -149,7 +151,16 @@ export default function MembersPage() {
                     <select className="form-control" value={form.membershipType} onChange={e => setForm({ ...form, membershipType: e.target.value })} required>
                       <option value="">Select type</option><option>Full Member</option><option>New Convert</option><option>Visitor</option>
                     </select>
+
                   </div>
+                  <div className="form-group">
+  <label className="form-label">Family Head</label>
+  <input className="form-control" value={form.familyHead} onChange={e => setForm({ ...form, familyHead: e.target.value })} placeholder="Name of family head" />
+</div>
+<div className="form-group">
+  <label className="form-label">Family Head Contact</label>
+  <input className="form-control" value={form.familyHeadContact} onChange={e => setForm({ ...form, familyHeadContact: e.target.value })} placeholder="Phone number of family head" />
+</div>
                 </div>
               </div>
               <div className="modal-footer">
