@@ -41,11 +41,20 @@ export default function MembersPage() {
     setEditMember(m); setShowModal(true)
   }
 
-  const handleSave = async e => {
+ const handleSave = async e => {
     e.preventDefault(); setSaving(true)
     try {
-      if (editMember) { await api.put(`/members/${editMember._id}`, form); toast.success('Member updated') }
-      else { await api.post('/members', form); toast.success('Member added') }
+      const stored = localStorage.getItem('thcoc_user')
+      const token = stored ? JSON.parse(stored).token : null
+      const config = { headers: { Authorization: `Bearer ${token}` } }
+      
+      if (editMember) { 
+        await api.put(`/members/${editMember._id}`, form, config)
+        toast.success('Member updated') 
+      } else { 
+        await api.post('/members', form, config)
+        toast.success('Member added') 
+      }
       fetchMembers(); setShowModal(false)
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to save') }
     finally { setSaving(false) }
