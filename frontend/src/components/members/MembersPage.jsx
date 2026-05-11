@@ -99,6 +99,7 @@ export default function MembersPage() {
                       <td><span className={`badge ${m.membershipType === 'Full Member' ? 'badge-success' : m.membershipType === 'New Convert' ? 'badge-info' : 'badge-gray'}`}>{m.membershipType}</span></td>
                       <td>{m.maritalStatus}</td>
                       <td>{m.familyHead || '—'}</td>
+<td>{m.familyHeadContact || '—'}</td>
                       <td>{m.isFlagged ? <span className="badge badge-danger">⚠️ Flagged</span> : <span className="badge badge-success">Active</span>}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
