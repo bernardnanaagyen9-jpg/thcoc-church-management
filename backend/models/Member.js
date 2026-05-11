@@ -10,22 +10,16 @@ const memberSchema = new mongoose.Schema({
   gender: { type: String, enum: ['Male', 'Female'], required: true },
   maritalStatus: { type: String, enum: ['Single', 'Married', 'Widow'], required: true },
   membershipType: { type: String, enum: ['Full Member', 'New Convert', 'Visitor'], required: true },
+  familyHead: { type: String, trim: true, default: '' },
+  familyHeadContact: { type: String, trim: true, default: '' },
   isActive: { type: Boolean, default: true },
   consecutiveAbsences: { type: Number, default: 0 },
-  isFlagged: { membertype: Boolean, default: false },
-  joinDate: { type: Date, default: Date.now }
-  familyHead: {
-  type: String,
-  trim: true
-},
-familyHeadContact: {
-  type: String,
-  trim: true
-},
+  isFlagged: { type: Boolean, default: false },
+  joinDate: { type: Date, default: Date.now },
   photo: {
-  url: { type: String, default: '' },
-  publicId: { type: String, default: '' }
-},
+    url: { type: String, default: '' },
+    publicId: { type: String, default: '' }
+  }
 }, { timestamps: true });
 
 memberSchema.pre('save', async function(next) {
@@ -34,20 +28,15 @@ memberSchema.pre('save', async function(next) {
       let isUnique = false
       let memberId
       while (!isUnique) {
-        // Find the highest existing member ID number
         const lastMember = await mongoose.model('Member')
           .findOne({ memberId: { $regex: /^THCoC-\d+$/ } })
           .sort({ memberId: -1 })
-        
         let nextNum = 1
         if (lastMember && lastMember.memberId) {
           const lastNum = parseInt(lastMember.memberId.replace('THCoC-', ''))
           nextNum = lastNum + 1
         }
-        
         memberId = `THCoC-${String(nextNum).padStart(6, '0')}`
-        
-        // Check if this ID already exists
         const existing = await mongoose.model('Member').findOne({ memberId })
         if (!existing) isUnique = true
       }
