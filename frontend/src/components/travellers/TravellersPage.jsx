@@ -69,15 +69,17 @@ export default function TravellersPage({ isAdmin }) {
           ) : (
             <div className="table-container">
               <table>
-                <thead><tr><th>Full Name</th><th>Gender</th><th>Phone</th><th>Address</th><th>Visit Date</th>{isAdmin && <th>Actions</th>}</tr></thead>
+                <thead><tr><th>Full Name</th><th>Gender</th><th>Phone</th><th>Address</th><th>Family Head</th><th>Family Head Contact</th><th>Visit Date</th>{isAdmin && <th>Actions</th>}</tr></thead>
                 <tbody>
                   {filtered.map(t => (
                     <tr key={t._id}>
-                      <td style={{ fontWeight: 600 }}>{t.fullName}</td>
-                      <td>{t.gender}</td>
-                      <td>{t.phoneNumber || '—'}</td>
-                      <td>{t.residentialAddress || '—'}</td>
-                      <td>{formatShortDate(t.visitDate)}</td>
+  <td style={{ fontWeight: 600 }}>{t.fullName}</td>
+  <td>{t.gender}</td>
+  <td>{t.phoneNumber || '—'}</td>
+  <td>{t.residentialAddress || '—'}</td>
+  <td>{t.familyHead || '—'}</td>
+  <td>{t.familyHeadContact || '—'}</td>
+  <td>{formatShortDate(t.visitDate)}</td>
                       {isAdmin && (
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>

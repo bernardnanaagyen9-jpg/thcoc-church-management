@@ -15,7 +15,8 @@ router.post('/', protect, async (req, res) => {
     const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType } = req.body;
     if (!fullName || !gender)
       return res.status(400).json({ message: 'Full name and gender are required' });
-    const traveller = await Traveller.create({ fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, addedBy: req.user._id });
+    const { familyHead, familyHeadContact } = req.body;
+const traveller = await Traveller.create({ fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead: familyHead || '', familyHeadContact: familyHeadContact || '', addedBy: req.user._id });
     res.status(201).json(traveller);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
