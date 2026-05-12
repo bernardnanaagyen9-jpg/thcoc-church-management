@@ -96,7 +96,7 @@ export default function MembersPage() {
             <div className="table-container">
               <table>
                 <thead>
-                  <tr><th>Member ID</th><th>Full Name</th><th>Gender</th><th>Phone</th><th>Membership</th><th>Marital Status</th><th>Family Head</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Member ID</th><th>Full Name</th><th>Gender</th><th>Phone</th><th>Membership</th><th>Marital Status</th><th>Family Head</th><th>Family Head Contact</th><th>Status</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                   {filtered.map(m => (
