@@ -21,10 +21,15 @@ router.get('/:id', protect, async (req, res) => {
 
 router.post('/', protect, adminOnly, async (req, res) => {
   try {
-    const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType } = req.body;
+    const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
     if (!fullName || !gender || !maritalStatus || !membershipType)
       return res.status(400).json({ message: 'Full name, gender, marital status and membership type are required' });
-    const member = await Member.create({ fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType });
+    const member = await Member.create({ 
+      fullName, phoneNumber, email, residentialAddress, 
+      occupation, gender, maritalStatus, membershipType,
+      familyHead: familyHead || '',
+      familyHeadContact: familyHeadContact || ''
+    });
     res.status(201).json(member);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
@@ -32,18 +37,21 @@ router.post('/', protect, adminOnly, async (req, res) => {
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
     const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
-    
-    const member = await Member.findByIdAndUpdate(
-      req.params.id, 
-      { 
-        fullName, phoneNumber, email, residentialAddress, 
-        occupation, gender, maritalStatus, membershipType,
-        familyHead: familyHead || '',
-        familyHeadContact: familyHeadContact || ''
-      }, 
-      { new: true, runValidators: true }
-    );
+    const member = await Member.findById(req.params.id);
     if (!member) return res.status(404).json({ message: 'Member not found' });
+    
+    member.fullName = fullName || member.fullName;
+    member.phoneNumber = phoneNumber || member.phoneNumber;
+    member.email = email || member.email;
+    member.residentialAddress = residentialAddress || member.residentialAddress;
+    member.occupation = occupation || member.occupation;
+    member.gender = gender || member.gender;
+    member.maritalStatus = maritalStatus || member.maritalStatus;
+    member.membershipType = membershipType || member.membershipType;
+    member.familyHead = familyHead !== undefined ? familyHead : member.familyHead;
+    member.familyHeadContact = familyHeadContact !== undefined ? familyHeadContact : member.familyHeadContact;
+    
+    await member.save();
     res.json(member);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
@@ -60,18 +68,13 @@ router.delete('/:id', protect, adminOnly, async (req, res) => {
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
-// Upload member photo
 router.post('/:id/photo', protect, adminOnly, upload.single('photo'), async (req, res) => {
   try {
     const member = await Member.findById(req.params.id);
     if (!member) return res.status(404).json({ message: 'Member not found' });
-
-    // Delete old photo if exists
     if (member.photo?.publicId) {
       await cloudinary.uploader.destroy(member.photo.publicId);
     }
-
-    // Upload buffer to cloudinary
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: 'thcoc-members', transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face' }] },
@@ -79,17 +82,12 @@ router.post('/:id/photo', protect, adminOnly, upload.single('photo'), async (req
       )
       stream.end(req.file.buffer)
     })
-
-    member.photo = {
-      url: result.secure_url,
-      publicId: result.public_id
-    };
+    member.photo = { url: result.secure_url, publicId: result.public_id };
     await member.save();
     res.json({ message: 'Photo uploaded successfully', photo: member.photo });
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
-// Delete member photo
 router.delete('/:id/photo', protect, adminOnly, async (req, res) => {
   try {
     const member = await Member.findById(req.params.id);
