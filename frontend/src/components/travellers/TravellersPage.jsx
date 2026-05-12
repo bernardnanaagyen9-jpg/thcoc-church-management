@@ -25,17 +25,38 @@ export default function TravellersPage({ isAdmin }) {
   }
 
   const openAdd = () => { setForm(EMPTY); setEditItem(null); setShowModal(true) }
+  
   const openEdit = (t) => {
     if (!isAdmin) return
-    setForm({ fullName: t.fullName, phoneNumber: t.phoneNumber || '', email: t.email || '', residentialAddress: t.residentialAddress || '', occupation: t.occupation || '', gender: t.gender, maritalStatus: t.maritalStatus || '', membershipType: t.membershipType || 'Visitor' })
+    setForm({ 
+      fullName: t.fullName, 
+      phoneNumber: t.phoneNumber || '', 
+      email: t.email || '', 
+      residentialAddress: t.residentialAddress || '', 
+      occupation: t.occupation || '', 
+      gender: t.gender, 
+      maritalStatus: t.maritalStatus || '', 
+      membershipType: t.membershipType || 'Visitor',
+      familyHead: t.familyHead || '',
+      familyHeadContact: t.familyHeadContact || ''
+    })
     setEditItem(t); setShowModal(true)
   }
 
   const handleSave = async e => {
     e.preventDefault(); setSaving(true)
     try {
-      if (editItem) { await api.put(`/travellers/${editItem._id}`, form); toast.success('Traveller updated') }
-      else { await api.post('/travellers', form); toast.success('Traveller added') }
+      const stored = localStorage.getItem('thcoc_user')
+      const token = stored ? JSON.parse(stored).token : null
+      const config = { headers: { Authorization: `Bearer ${token}` } }
+
+      if (editItem) { 
+        await api.put(`/travellers/${editItem._id}`, form, config)
+        toast.success('Traveller updated') 
+      } else { 
+        await api.post('/travellers', form, config)
+        toast.success('Traveller added') 
+      }
       fetchTravellers(); setShowModal(false)
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to save') }
     finally { setSaving(false) }
@@ -46,7 +67,10 @@ export default function TravellersPage({ isAdmin }) {
     catch { toast.error('Failed to delete') }
   }
 
-  const filtered = travellers.filter(t => t.fullName.toLowerCase().includes(search.toLowerCase()) || t.residentialAddress?.toLowerCase().includes(search.toLowerCase()))
+  const filtered = travellers.filter(t => 
+    t.fullName.toLowerCase().includes(search.toLowerCase()) || 
+    t.residentialAddress?.toLowerCase().includes(search.toLowerCase())
+  )
 
   return (
     <div className="page-wrapper">
@@ -69,17 +93,28 @@ export default function TravellersPage({ isAdmin }) {
           ) : (
             <div className="table-container">
               <table>
-                <thead><tr><th>Full Name</th><th>Gender</th><th>Phone</th><th>Address</th><th>Family Head</th><th>Family Head Contact</th><th>Visit Date</th>{isAdmin && <th>Actions</th>}</tr></thead>
+                <thead>
+                  <tr>
+                    <th>Full Name</th>
+                    <th>Gender</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Family Head</th>
+                    <th>Family Head Contact</th>
+                    <th>Visit Date</th>
+                    {isAdmin && <th>Actions</th>}
+                  </tr>
+                </thead>
                 <tbody>
                   {filtered.map(t => (
                     <tr key={t._id}>
-  <td style={{ fontWeight: 600 }}>{t.fullName}</td>
-  <td>{t.gender}</td>
-  <td>{t.phoneNumber || '—'}</td>
-  <td>{t.residentialAddress || '—'}</td>
-  <td>{t.familyHead || '—'}</td>
-  <td>{t.familyHeadContact || '—'}</td>
-  <td>{formatShortDate(t.visitDate)}</td>
+                      <td style={{ fontWeight: 600 }}>{t.fullName}</td>
+                      <td>{t.gender}</td>
+                      <td>{t.phoneNumber || '—'}</td>
+                      <td>{t.residentialAddress || '—'}</td>
+                      <td>{t.familyHead || '—'}</td>
+                      <td>{t.familyHeadContact || '—'}</td>
+                      <td>{formatShortDate(t.visitDate)}</td>
                       {isAdmin && (
                         <td>
                           <div style={{ display: 'flex', gap: 6 }}>
@@ -139,15 +174,20 @@ export default function TravellersPage({ isAdmin }) {
                     </select>
                   </div>
                   <div className="form-group">
-  <label className="form-label">Family Head</label>
-  <input className="form-control" value={form.familyHead} onChange={e => setForm({ ...form, familyHead: e.target.value })} placeholder="Name of family head" />
-</div>
-<div className="form-group">
-  <label className="form-label">Family Head Contact</label>
-  <input className="form-control" value={form.familyHeadContact} onChange={e => setForm({ ...form, familyHeadContact: e.target.value })} placeholder="Phone number of family head" />
-</div>
+                    <label className="form-label">Membership Type</label>
+                    <select className="form-control" value={form.membershipType} onChange={e => setForm({ ...form, membershipType: e.target.value })}>
+                      <option value="">Select type</option><option>Full Member</option><option>New Convert</option><option>Visitor</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Family Head</label>
+                    <input className="form-control" value={form.familyHead} onChange={e => setForm({ ...form, familyHead: e.target.value })} placeholder="Name of family head" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Family Head Contact</label>
+                    <input className="form-control" value={form.familyHeadContact} onChange={e => setForm({ ...form, familyHeadContact: e.target.value })} placeholder="Phone number of family head" />
+                  </div>
                 </div>
-
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>

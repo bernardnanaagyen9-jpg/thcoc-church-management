@@ -12,19 +12,38 @@ router.get('/', protect, async (req, res) => {
 
 router.post('/', protect, async (req, res) => {
   try {
-    const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType } = req.body;
+    const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
     if (!fullName || !gender)
       return res.status(400).json({ message: 'Full name and gender are required' });
-    const { familyHead, familyHeadContact } = req.body;
-const traveller = await Traveller.create({ fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead: familyHead || '', familyHeadContact: familyHeadContact || '', addedBy: req.user._id });
+    const traveller = await Traveller.create({ 
+      fullName, phoneNumber, email, residentialAddress, 
+      occupation, gender, maritalStatus, membershipType,
+      familyHead: familyHead || '',
+      familyHeadContact: familyHeadContact || '',
+      addedBy: req.user._id 
+    });
     res.status(201).json(traveller);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
-    const traveller = await Traveller.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
+    const traveller = await Traveller.findById(req.params.id);
     if (!traveller) return res.status(404).json({ message: 'Traveller not found' });
+    
+    traveller.fullName = fullName || traveller.fullName;
+    traveller.phoneNumber = phoneNumber || traveller.phoneNumber;
+    traveller.email = email || traveller.email;
+    traveller.residentialAddress = residentialAddress || traveller.residentialAddress;
+    traveller.occupation = occupation || traveller.occupation;
+    traveller.gender = gender || traveller.gender;
+    traveller.maritalStatus = maritalStatus || traveller.maritalStatus;
+    traveller.membershipType = membershipType || traveller.membershipType;
+    traveller.familyHead = familyHead !== undefined ? familyHead : traveller.familyHead;
+    traveller.familyHeadContact = familyHeadContact !== undefined ? familyHeadContact : traveller.familyHeadContact;
+    
+    await traveller.save();
     res.json(traveller);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
