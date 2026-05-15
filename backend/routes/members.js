@@ -21,37 +21,19 @@ router.get('/:id', protect, async (req, res) => {
 
 router.post('/', protect, adminOnly, async (req, res) => {
   try {
-    const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
-    if (!fullName || !gender || !maritalStatus || !membershipType)
-      return res.status(400).json({ message: 'Full name, gender, marital status and membership type are required' });
-    const member = await Member.create({ 
-      fullName, phoneNumber, email, residentialAddress, 
-      occupation, gender, maritalStatus, membershipType,
-      familyHead: familyHead || '',
-      familyHeadContact: familyHeadContact || ''
-    });
+    const member = await Member.create(req.body);
     res.status(201).json(member);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
-    const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
-    const member = await Member.findById(req.params.id);
+    const member = await Member.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: false }
+    );
     if (!member) return res.status(404).json({ message: 'Member not found' });
-    
-    member.fullName = fullName || member.fullName;
-    member.phoneNumber = phoneNumber || member.phoneNumber;
-    member.email = email || member.email;
-    member.residentialAddress = residentialAddress || member.residentialAddress;
-    member.occupation = occupation || member.occupation;
-    member.gender = gender || member.gender;
-    member.maritalStatus = maritalStatus || member.maritalStatus;
-    member.membershipType = membershipType || member.membershipType;
-    member.familyHead = familyHead !== undefined ? familyHead : member.familyHead;
-    member.familyHeadContact = familyHeadContact !== undefined ? familyHeadContact : member.familyHeadContact;
-    
-    await member.save();
     res.json(member);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
