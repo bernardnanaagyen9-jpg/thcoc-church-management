@@ -14,6 +14,7 @@ export default function AttendancePage({ isAdmin }) {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [sundayDate, setSundayDate] = useState('')
+  const [memberSearch, setMemberSearch] = useState('')
   const [memberAttendance, setMemberAttendance] = useState([])
   const [travellerAttendance, setTravellerAttendance] = useState([])
   const [intermediate, setIntermediate] = useState(0)
@@ -150,38 +151,56 @@ export default function AttendancePage({ isAdmin }) {
                   </div>
                 </div>
 
-                <div style={styles.sectionHeader}>
-                  <div>
-                    <span style={styles.sectionTitle}>👥 Members</span>
-                    <span style={styles.sectionCount}>{presentCount} / {memberAttendance.length} present</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button type="button" className="btn btn-success btn-sm" onClick={() => markAll('Present')}>Mark All Present</button>
-                    <button type="button" className="btn btn-danger btn-sm" onClick={() => markAll('Absent')}>Mark All Absent</button>
-                  </div>
-                </div>
+               <div style={styles.sectionHeader}>
+  <div>
+    <span style={styles.sectionTitle}>👥 Members</span>
+    <span style={styles.sectionCount}>{presentCount} / {memberAttendance.length} present</span>
+  </div>
+  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <button type="button" className="btn btn-success btn-sm" onClick={() => markAll('Present')}>Mark All Present</button>
+    <button type="button" className="btn btn-danger btn-sm" onClick={() => markAll('Absent')}>Mark All Absent</button>
+  </div>
+</div>
 
-                {memberAttendance.length === 0
-                  ? <div className="alert alert-info">No members yet. Add members first.</div>
-                  : (
-                    <div style={styles.attendanceGrid}>
-                      {memberAttendance.map((m, idx) => (
-                        <div key={m.memberId} style={styles.attendanceCard}>
-                          <div style={styles.memberInfo}>
-                            <div style={styles.memberAvatar}>{m.fullName[0]}</div>
-                            <div>
-                              <div style={styles.memberName}>{m.fullName}</div>
-                              <div style={styles.memberMeta}>{m.gender} · {m.membershipType}</div>
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            <button type="button" className={`check-btn present ${m.status === 'Present' ? 'active' : ''}`} onClick={() => toggleMember(idx, 'Present')}>Present</button>
-                            <button type="button" className={`check-btn absent ${m.status === 'Absent' ? 'active' : ''}`} onClick={() => toggleMember(idx, 'Absent')}>Absent</button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+{/* Search bar */}
+<div style={{ marginBottom: 12, position: 'relative' }}>
+  <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dark)' }}>🔍</span>
+  <input
+    style={{ width: '100%', padding: '8px 12px 8px 32px', background: 'var(--dark-3)', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text)', fontSize: '0.875rem', outline: 'none' }}
+    placeholder="Search member by name..."
+    value={memberSearch}
+    onChange={e => setMemberSearch(e.target.value)}
+  />
+</div>
+
+               {memberAttendance.length === 0
+  ? <div className="alert alert-info">No members yet. Add members first.</div>
+  : (
+    <div style={styles.attendanceGrid}>
+      {memberAttendance
+        .map((m, originalIdx) => ({ ...m, originalIdx }))
+        .filter(m => m.fullName.toLowerCase().includes(memberSearch.toLowerCase()))
+        .map((m) => (
+          <div key={m.memberId} style={styles.attendanceCard}>
+            <div style={styles.memberInfo}>
+              <div style={styles.memberAvatar}>{m.fullName[0]}</div>
+              <div>
+                <div style={styles.memberName}>{m.fullName}</div>
+                <div style={styles.memberMeta}>{m.gender} · {m.membershipType}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button type="button"
+                className={`check-btn present ${m.status === 'Present' ? 'active' : ''}`}
+                onClick={() => toggleMember(m.originalIdx, 'Present')}>Present</button>
+              <button type="button"
+                className={`check-btn absent ${m.status === 'Absent' ? 'active' : ''}`}
+                onClick={() => toggleMember(m.originalIdx, 'Absent')}>Absent</button>
+            </div>
+          </div>
+        ))}
+    </div>
+  )}
 
                 {travellerAttendance.length > 0 && (
                   <>
