@@ -6,7 +6,8 @@ const { cloudinary, upload } = require('../config/cloudinary');
 
 router.get('/', protect, async (req, res) => {
   try {
-    const members = await Member.find().sort({ createdAt: -1 });
+    const churchId = req.user.churchId?._id || req.user.churchId;
+    const members = await Member.find({ churchId }).sort({ createdAt: -1 });
     res.json(members);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
@@ -21,11 +22,11 @@ router.get('/:id', protect, async (req, res) => {
 
 router.post('/', protect, adminOnly, async (req, res) => {
   try {
-    const member = await Member.create(req.body);
+    const churchId = req.user.churchId?._id || req.user.churchId;
+    const member = await Member.create({ ...req.body, churchId });
     res.status(201).json(member);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
-
 router.put('/:id', protect, adminOnly, async (req, res) => {
   try {
     const member = await Member.findByIdAndUpdate(

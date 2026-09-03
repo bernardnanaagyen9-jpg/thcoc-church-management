@@ -17,6 +17,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/churches', require('./routes/churches'));
 app.use('/api/members', require('./routes/members'));
 app.use('/api/travellers', require('./routes/travellers'));
 app.use('/api/attendance', require('./routes/attendance'));

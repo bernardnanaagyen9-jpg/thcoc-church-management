@@ -7,6 +7,7 @@ const thanksgivingEntrySchema = new mongoose.Schema({
 
 const thanksgivingSchema = new mongoose.Schema({
   sundayDate: { type: Date, required: true },
+  churchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Church' },
   entries: [thanksgivingEntrySchema],
   totalAttendance: { type: Number, default: 0 },
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }

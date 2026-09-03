@@ -5,7 +5,8 @@ const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/', protect, async (req, res) => {
   try {
-    const travellers = await Traveller.find().sort({ createdAt: -1 });
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const travellers = await Traveller.find({ churchId }).sort({ createdAt: -1 });
     res.json(travellers);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
@@ -15,7 +16,15 @@ router.post('/', protect, async (req, res) => {
     const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
     if (!fullName || !gender)
       return res.status(400).json({ message: 'Full name and gender are required' });
-    const traveller = await Traveller.create({ 
+   const churchId = req.user.churchId?._id || req.user.churchId;
+const traveller = await Traveller.create({
+  fullName, phoneNumber, email, residentialAddress,
+  occupation, gender, maritalStatus, membershipType,
+  familyHead: familyHead || '',
+  familyHeadContact: familyHeadContact || '',
+  churchId,
+  addedBy: req.user._id
+});
       fullName, phoneNumber, email, residentialAddress, 
       occupation, gender, maritalStatus, membershipType,
       familyHead: familyHead || '',

@@ -13,7 +13,8 @@ const travellerAttendanceSchema = new mongoose.Schema({
 });
 
 const attendanceSchema = new mongoose.Schema({
-  sundayDate: { type: Date, required: true, unique: true },
+ sundayDate: { type: Date, required: true },
+churchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Church', required: true },
   memberAttendance: [memberAttendanceSchema],
   travellerAttendance: [travellerAttendanceSchema],
   intermediateClass: { type: Number, default: 0, min: 0 },

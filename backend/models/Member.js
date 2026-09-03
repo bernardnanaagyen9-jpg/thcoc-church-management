@@ -9,6 +9,7 @@ const childSchema = new mongoose.Schema({
 const memberSchema = new mongoose.Schema({
   // Auto ID
   memberId: { type: String, unique: true },
+  churchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Church', required: true },
 
   // PERSONAL
   fullName: { type: String, required: true, trim: true },

@@ -7,6 +7,7 @@ const congregationSchema = new mongoose.Schema({
 
 const jointServiceSchema = new mongoose.Schema({
   serviceDate: { type: Date, required: true },
+  churchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Church' },
   title: { type: String, trim: true },
   congregations: [congregationSchema],
   grandTotal: { type: Number, default: 0 },

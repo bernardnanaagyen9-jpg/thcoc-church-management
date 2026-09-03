@@ -5,7 +5,8 @@ const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/', protect, async (req, res) => {
   try {
-    const records = await JointService.find().sort({ serviceDate: -1 });
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const records = await JointService.find({ churchId }).sort({ serviceDate: -1 });
     res.json(records);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
@@ -23,7 +24,8 @@ router.post('/', protect, adminOnly, async (req, res) => {
     const { serviceDate, title, congregations } = req.body;
     if (!serviceDate || !congregations || congregations.length === 0)
       return res.status(400).json({ message: 'Date and congregations required' });
-    const record = await JointService.create({ serviceDate: new Date(serviceDate), title, congregations, addedBy: req.user._id });
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const record = await JointService.create({ serviceDate: new Date(serviceDate), title, congregations, churchId, addedBy: req.user._id });
     res.status(201).json(record);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });

@@ -6,8 +6,8 @@ const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/attendance-summary', protect, async (req, res) => {
   try {
-    const records = await Attendance.find()
-      .populate('memberAttendance.member', 'fullName memberId gender membershipType')
+const churchId = req.user.churchId?._id || req.user.churchId;
+const records = await Attendance.find({ churchId })      .populate('memberAttendance.member', 'fullName memberId gender membershipType')
       .sort({ sundayDate: -1 });
     const summary = records.map(rec => ({
       _id: rec._id,
@@ -24,8 +24,8 @@ router.get('/attendance-summary', protect, async (req, res) => {
 
 router.get('/flagged-members', protect, adminOnly, async (req, res) => {
   try {
-    const flagged = await Member.find({ isFlagged: true }).sort({ fullName: 1 });
-    res.json(flagged);
+const churchId = req.user.churchId?._id || req.user.churchId;
+const flagged = await Member.find({ isFlagged: true, churchId }).sort({ fullName: 1 });    res.json(flagged);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
@@ -42,10 +42,11 @@ router.get('/member-attendance/:memberId', protect, adminOnly, async (req, res) 
 
 router.get('/overview', protect, async (req, res) => {
   try {
-    const totalMembers = await Member.countDocuments();
-    const flaggedMembers = await Member.countDocuments({ isFlagged: true });
-    const lastAttendance = await Attendance.findOne().sort({ sundayDate: -1 });
-    const totalSundays = await Attendance.countDocuments();
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const totalMembers = await Member.countDocuments({ churchId });
+const flaggedMembers = await Member.countDocuments({ isFlagged: true, churchId });
+const lastAttendance = await Attendance.findOne({ churchId }).sort({ sundayDate: -1 });
+const totalSundays = await Attendance.countDocuments({ churchId });
     res.json({
       totalMembers, flaggedMembers,
       lastAttendanceTotal: lastAttendance ? lastAttendance.stats.total : 0,

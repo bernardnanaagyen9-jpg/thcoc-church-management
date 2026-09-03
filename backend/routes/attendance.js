@@ -6,7 +6,8 @@ const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/', protect, async (req, res) => {
   try {
-    const records = await Attendance.find()
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const records = await Attendance.find({ churchId })
       .populate('memberAttendance.member', 'fullName memberId gender membershipType')
       .populate('travellerAttendance.traveller', 'fullName gender')
       .sort({ sundayDate: -1 });
@@ -31,16 +32,19 @@ router.post('/', protect, async (req, res) => {
     const date = new Date(sundayDate);
     const startOfDay = new Date(date.setHours(0, 0, 0, 0));
     const endOfDay = new Date(new Date(sundayDate).setHours(23, 59, 59, 999));
-    const existing = await Attendance.findOne({ sundayDate: { $gte: startOfDay, $lte: endOfDay } });
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const existing = await Attendance.findOne({ churchId, sundayDate: { $gte: startOfDay, $lte: endOfDay } });
     if (existing) return res.status(400).json({ message: 'Attendance already marked for this Sunday. Please edit instead.' });
-    const record = await Attendance.create({
-      sundayDate: new Date(sundayDate),
-      memberAttendance: memberAttendance || [],
-      travellerAttendance: travellerAttendance || [],
-      intermediateClass: intermediateClass || 0,
-      childrenService: childrenService || 0,
-      markedBy: req.user._id
-    });
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const record = await Attendance.create({
+  sundayDate: new Date(sundayDate),
+  memberAttendance: memberAttendance || [],
+  travellerAttendance: travellerAttendance || [],
+  intermediateClass: intermediateClass || 0,
+  childrenService: childrenService || 0,
+  markedBy: req.user._id,
+  churchId
+});
     await updateMemberFlags();
     await record.populate('memberAttendance.member', 'fullName memberId gender membershipType');
     await record.populate('travellerAttendance.traveller', 'fullName gender');

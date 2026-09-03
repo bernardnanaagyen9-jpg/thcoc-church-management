@@ -11,6 +11,7 @@ const travellerSchema = new mongoose.Schema({
   membershipType: { type: String, enum: ['Full Member', 'New Convert', 'Visitor'], default: 'Visitor' },
   familyHead: { type: String, trim: true, default: '' },
   familyHeadContact: { type: String, trim: true, default: '' },
+  churchId: { type: mongoose.Schema.Types.ObjectId, ref: 'Church' },
   visitDate: { type: Date, default: Date.now },
   addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });

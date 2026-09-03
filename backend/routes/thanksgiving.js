@@ -5,7 +5,8 @@ const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/', protect, async (req, res) => {
   try {
-    const records = await Thanksgiving.find().sort({ sundayDate: -1 });
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const records = await Thanksgiving.find({ churchId }).sort({ sundayDate: -1 });
     res.json(records);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
@@ -23,7 +24,8 @@ router.post('/', protect, async (req, res) => {
     const { sundayDate, entries } = req.body;
     if (!sundayDate || !entries || entries.length === 0)
       return res.status(400).json({ message: 'Date and at least one entry required' });
-    const record = await Thanksgiving.create({ sundayDate: new Date(sundayDate), entries, addedBy: req.user._id });
+    const churchId = req.user.churchId?._id || req.user.churchId;
+const record = await Thanksgiving.create({ sundayDate: new Date(sundayDate), entries, churchId, addedBy: req.user._id });
     res.status(201).json(record);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
