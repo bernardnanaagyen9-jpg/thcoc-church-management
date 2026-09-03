@@ -66,7 +66,7 @@ export default function AdminHome() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Dashboard</h1>
-          <p className="page-subtitle">Welcome back, {user?.name}.</p>
+       <p className="page-subtitle">Welcome back, {user?.name} — {user?.churchName || 'Church Management'}</p>
         </div>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
           {new Date().toLocaleDateString('en-GH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

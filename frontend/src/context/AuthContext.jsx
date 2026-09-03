@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
         api.defaults.headers.common['Authorization'] = `Bearer ${parsed.token}`
       }
     } catch (e) {
-      console.error('Auth restore error:', e)
       localStorage.removeItem('thcoc_user')
     }
     setLoading(false)
