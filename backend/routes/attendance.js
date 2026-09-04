@@ -4,10 +4,14 @@ const Attendance = require('../models/Attendance');
 const Member = require('../models/Member');
 const { protect, adminOnly } = require('../middleware/auth');
 
+const getChurchId = (user) => {
+  return user.churchId && user.churchId._id ? user.churchId._id : user.churchId;
+}
+
 router.get('/', protect, async (req, res) => {
   try {
-    const churchId = req.user.churchId?._id || req.user.churchId;
-const records = await Attendance.find({ churchId })
+    const churchId = getChurchId(req.user);
+    const records = await Attendance.find({ churchId })
       .populate('memberAttendance.member', 'fullName memberId gender membershipType')
       .populate('travellerAttendance.traveller', 'fullName gender')
       .sort({ sundayDate: -1 });
@@ -29,23 +33,22 @@ router.post('/', protect, async (req, res) => {
   try {
     const { sundayDate, memberAttendance, travellerAttendance, intermediateClass, childrenService } = req.body;
     if (!sundayDate) return res.status(400).json({ message: 'Sunday date is required' });
+    const churchId = getChurchId(req.user);
     const date = new Date(sundayDate);
     const startOfDay = new Date(date.setHours(0, 0, 0, 0));
     const endOfDay = new Date(new Date(sundayDate).setHours(23, 59, 59, 999));
-    const churchId = req.user.churchId?._id || req.user.churchId;
-const existing = await Attendance.findOne({ churchId, sundayDate: { $gte: startOfDay, $lte: endOfDay } });
+    const existing = await Attendance.findOne({ churchId, sundayDate: { $gte: startOfDay, $lte: endOfDay } });
     if (existing) return res.status(400).json({ message: 'Attendance already marked for this Sunday. Please edit instead.' });
-    const churchId = req.user.churchId?._id || req.user.churchId;
-const record = await Attendance.create({
-  sundayDate: new Date(sundayDate),
-  memberAttendance: memberAttendance || [],
-  travellerAttendance: travellerAttendance || [],
-  intermediateClass: intermediateClass || 0,
-  childrenService: childrenService || 0,
-  markedBy: req.user._id,
-  churchId
-});
-    await updateMemberFlags();
+    const record = await Attendance.create({
+      sundayDate: new Date(sundayDate),
+      memberAttendance: memberAttendance || [],
+      travellerAttendance: travellerAttendance || [],
+      intermediateClass: intermediateClass || 0,
+      childrenService: childrenService || 0,
+      markedBy: req.user._id,
+      churchId
+    });
+    await updateMemberFlags(churchId);
     await record.populate('memberAttendance.member', 'fullName memberId gender membershipType');
     await record.populate('travellerAttendance.traveller', 'fullName gender');
     res.status(201).json(record);
@@ -62,7 +65,8 @@ router.put('/:id', protect, async (req, res) => {
     record.intermediateClass = intermediateClass !== undefined ? intermediateClass : record.intermediateClass;
     record.childrenService = childrenService !== undefined ? childrenService : record.childrenService;
     await record.save();
-    await updateMemberFlags();
+    const churchId = getChurchId(req.user);
+    await updateMemberFlags(churchId);
     await record.populate('memberAttendance.member', 'fullName memberId gender membershipType');
     await record.populate('travellerAttendance.traveller', 'fullName gender');
     res.json(record);
@@ -77,10 +81,10 @@ router.delete('/:id', protect, adminOnly, async (req, res) => {
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
-async function updateMemberFlags() {
+async function updateMemberFlags(churchId) {
   try {
-    const lastTwo = await Attendance.find().sort({ sundayDate: -1 }).limit(2);
-    const allMembers = await Member.find();
+    const lastTwo = await Attendance.find({ churchId }).sort({ sundayDate: -1 }).limit(2);
+    const allMembers = await Member.find({ churchId });
     for (const member of allMembers) {
       let consecutiveAbsences = 0;
       for (const rec of lastTwo) {
