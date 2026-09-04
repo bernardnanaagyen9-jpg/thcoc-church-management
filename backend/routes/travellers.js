@@ -5,8 +5,8 @@ const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/', protect, async (req, res) => {
   try {
-    const churchId = req.user.churchId?._id || req.user.churchId;
-const travellers = await Traveller.find({ churchId }).sort({ createdAt: -1 });
+    const churchId = req.user.churchId && req.user.churchId._id ? req.user.churchId._id : req.user.churchId;
+    const travellers = await Traveller.find({ churchId }).sort({ createdAt: -1 });
     res.json(travellers);
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
@@ -16,20 +16,14 @@ router.post('/', protect, async (req, res) => {
     const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
     if (!fullName || !gender)
       return res.status(400).json({ message: 'Full name and gender are required' });
-   const churchId = req.user.churchId?._id || req.user.churchId;
-const traveller = await Traveller.create({
-  fullName, phoneNumber, email, residentialAddress,
-  occupation, gender, maritalStatus, membershipType,
-  familyHead: familyHead || '',
-  familyHeadContact: familyHeadContact || '',
-  churchId,
-  addedBy: req.user._id
-});
-      fullName, phoneNumber, email, residentialAddress, 
+    const churchId = req.user.churchId && req.user.churchId._id ? req.user.churchId._id : req.user.churchId;
+    const traveller = await Traveller.create({
+      fullName, phoneNumber, email, residentialAddress,
       occupation, gender, maritalStatus, membershipType,
       familyHead: familyHead || '',
       familyHeadContact: familyHeadContact || '',
-      addedBy: req.user._id 
+      churchId,
+      addedBy: req.user._id
     });
     res.status(201).json(traveller);
   } catch (error) { res.status(500).json({ message: error.message }); }
@@ -40,7 +34,6 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
     const { fullName, phoneNumber, email, residentialAddress, occupation, gender, maritalStatus, membershipType, familyHead, familyHeadContact } = req.body;
     const traveller = await Traveller.findById(req.params.id);
     if (!traveller) return res.status(404).json({ message: 'Traveller not found' });
-    
     traveller.fullName = fullName || traveller.fullName;
     traveller.phoneNumber = phoneNumber || traveller.phoneNumber;
     traveller.email = email || traveller.email;
@@ -51,7 +44,6 @@ router.put('/:id', protect, adminOnly, async (req, res) => {
     traveller.membershipType = membershipType || traveller.membershipType;
     traveller.familyHead = familyHead !== undefined ? familyHead : traveller.familyHead;
     traveller.familyHeadContact = familyHeadContact !== undefined ? familyHeadContact : traveller.familyHeadContact;
-    
     await traveller.save();
     res.json(traveller);
   } catch (error) { res.status(500).json({ message: error.message }); }
